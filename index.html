@@ -95,30 +95,6 @@
   .search-box:focus { border-color: var(--accent); }
   .search-box::placeholder { color: var(--text-muted); }
 
-  .filter-group {
-    display: flex;
-    gap: 6px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    margin-top: 10px;
-    padding-bottom: 4px;
-  }
-  .filter-group::-webkit-scrollbar { display: none; }
-  .filter-btn {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 12px;
-    color: var(--text-dim);
-    font-size: .78em;
-    cursor: pointer;
-    transition: all .2s;
-  }
-  .filter-btn:hover { background: var(--card-hover); color: var(--text); }
-  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-
   .results-info {
     max-width: 800px;
     margin: 0 auto;
@@ -249,9 +225,6 @@
 
 <div class="controls">
   <input type="text" class="search-box" id="searchBox" placeholder="🔍 輸入英文單字（如 make、take、decision）" autocomplete="off">
-  <div class="filter-group" id="filterGroup">
-    <button class="filter-btn active" data-filter="all">全部類型</button>
-  </div>
 </div>
 
 <div class="results-info" id="resultsInfo"></div>
@@ -274,21 +247,6 @@ fetch('data.json')
     allData = data;
     document.getElementById('entryCount').textContent = `共 ${data.length.toLocaleString()} 筆`;
     document.getElementById('loading').style.display = 'none';
-
-    // Collect top types for filter buttons (limit to top 10)
-    const typeCount = {};
-    data.forEach(d => { if (d.type) typeCount[d.type] = (typeCount[d.type]||0)+1; });
-    const topTypes = Object.entries(typeCount).sort((a,b) => b[1]-a[1]).slice(0,10).map(e=>e[0]);
-    const fg = document.getElementById('filterGroup');
-    topTypes.forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn';
-      btn.dataset.filter = t;
-      btn.textContent = t;
-      btn.addEventListener('click', () => filter(t, btn));
-      fg.appendChild(btn);
-    });
-
     doSearch();
   });
 
@@ -298,10 +256,8 @@ function esc(s) {
 
 function doSearch() {
   const term = document.getElementById('searchBox').value.toLowerCase().trim();
-  const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
 
   filteredData = allData.filter(d => {
-    if (activeFilter !== 'all' && d.type !== activeFilter) return false;
     if (!term) return true;
     const txt = (d.phrase + ' ' + d.chinese + ' ' + d.type + ' ' + d.example + ' ' + d.pattern).toLowerCase();
     return txt.includes(term);
@@ -362,21 +318,8 @@ function setupInfiniteScroll() {
   };
 }
 
-function filter(type, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  doSearch();
-}
-
 // Search
 document.getElementById('searchBox').addEventListener('input', doSearch);
-
-// Initial filter click handler
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    filter(this.dataset.filter, this);
-  });
-});
 </script>
 </body>
 </html>
