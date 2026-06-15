@@ -264,8 +264,8 @@ function doSearch() {
 
   filteredData = allData.filter(d => {
     if (!term) return true;
-    const txt = (d.phrase + ' ' + d.chinese + ' ' + d.type + ' ' + d.example + ' ' + d.pattern).toLowerCase();
-    return txt.includes(term);
+    const words = d.phrase.toLowerCase().split(/\s+/);
+    return words.includes(term);
   });
 
   currentPage = 0;
@@ -291,7 +291,7 @@ function renderPage() {
   noResults.style.display = 'none';
 
   const html = page.map(d => `
-    <div class="card" onclick="this.classList.toggle('expanded')">
+    <div class="card" onclick="document.querySelectorAll('.card.expanded').forEach(c=>{if(c!==this)c.classList.remove('expanded')});this.classList.toggle('expanded')">
       <div class="phrase"><span class="highlight">${esc(d.phrase)}</span></div>
       <div class="meta">
         <span class="chinese">${esc(d.chinese)}</span>
@@ -323,8 +323,14 @@ function setupInfiniteScroll() {
   };
 }
 
-// Search
+// Search - live filter on input, clear on Enter
 document.getElementById('searchBox').addEventListener('input', doSearch);
+document.getElementById('searchBox').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    doSearch();
+    e.target.value = '';
+  }
+});
 </script>
 </body>
 </html>
