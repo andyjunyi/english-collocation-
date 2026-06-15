@@ -98,9 +98,14 @@
   .filter-group {
     display: flex;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     margin-top: 10px;
+    padding-bottom: 4px;
   }
+  .filter-group::-webkit-scrollbar { display: none; }
   .filter-btn {
     background: var(--card);
     border: 1px solid var(--border);
@@ -270,11 +275,12 @@ fetch('data.json')
     document.getElementById('entryCount').textContent = `共 ${data.length.toLocaleString()} 筆`;
     document.getElementById('loading').style.display = 'none';
 
-    // Collect unique types for filter buttons
-    const types = new Set();
-    data.forEach(d => { if (d.type) types.add(d.type); });
+    // Collect top types for filter buttons (limit to top 10)
+    const typeCount = {};
+    data.forEach(d => { if (d.type) typeCount[d.type] = (typeCount[d.type]||0)+1; });
+    const topTypes = Object.entries(typeCount).sort((a,b) => b[1]-a[1]).slice(0,10).map(e=>e[0]);
     const fg = document.getElementById('filterGroup');
-    [...types].sort().forEach(t => {
+    topTypes.forEach(t => {
       const btn = document.createElement('button');
       btn.className = 'filter-btn';
       btn.dataset.filter = t;
