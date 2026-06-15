@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英文搭配詞查詢</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --card-hover: #222240;
+    --accent: #7c5cfc;
+    --accent-light: #a78bfa;
+    --green: #34d399;
+    --orange: #fb923c;
+    --pink: #f472b6;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --border: #2a2a45;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'Segoe UI', 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 20px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(124,92,252,.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  header h1 {
+    font-size: 1.6em;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-light), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+  }
+  header p {
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-size: .9em;
+    position: relative;
+  }
+  header .count {
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(52,211,153,.12);
+    color: var(--green);
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: .78em;
+    position: relative;
+  }
+
+  .controls {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+  }
+  .search-box {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    color: var(--text);
+    font-size: 1em;
+    outline: none;
+    transition: border .2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--text-muted); }
+
+  .filter-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .filter-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    color: var(--text-dim);
+    font-size: .78em;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .filter-btn:hover { background: var(--card-hover); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .results-info {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 16px 8px;
+    font-size: .8em;
+    color: var(--text-muted);
+  }
+
+  .grid {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    transition: all .3s;
+    cursor: pointer;
+  }
+  .card:hover {
+    background: var(--card-hover);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+  }
+  .card .phrase {
+    font-size: 1.25em;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .card .phrase .highlight {
+    background: linear-gradient(135deg, var(--accent-light), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .card .meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .card .chinese {
+    font-size: .88em;
+    color: var(--text-dim);
+  }
+  .card .type-tag {
+    display: inline-block;
+    background: rgba(124,92,252,.15);
+    color: var(--accent-light);
+    padding: 1px 10px;
+    border-radius: 10px;
+    font-size: .75em;
+  }
+  .card .details {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .card.expanded .details { display: block; }
+  .card .expand-hint {
+    font-size: .75em;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+  .card .example-block {
+    background: rgba(0,0,0,.25);
+    border-radius: 10px;
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+  .card .example-en {
+    font-size: .88em;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .card .example-pattern {
+    font-size: .75em;
+    color: var(--accent-light);
+    margin-top: 4px;
+  }
+  .card .simple-block {
+    font-size: .82em;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .loading, .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .loading .emoji, .no-results .emoji { font-size: 2.5em; margin-bottom: 10px; }
+
+  footer {
+    text-align: center;
+    padding: 24px 20px;
+    color: var(--text-muted);
+    font-size: .75em;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.3em; }
+    .card { padding: 16px; }
+    .card .phrase { font-size: 1.1em; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 英文搭配詞查詢</h1>
+  <p>快速查詢道地英文搭配用法</p>
+  <span class="count" id="entryCount">載入中…</span>
+</header>
+
+<div class="controls">
+  <input type="text" class="search-box" id="searchBox" placeholder="🔍 輸入英文單字（如 make、take、decision）" autocomplete="off">
+  <div class="filter-group" id="filterGroup">
+    <button class="filter-btn active" data-filter="all">全部類型</button>
+  </div>
+</div>
+
+<div class="results-info" id="resultsInfo"></div>
+<div class="grid" id="grid"></div>
+<div class="loading" id="loading"><div class="emoji">⏳</div><p>載入資料中…</p></div>
+<div class="no-results" id="noResults" style="display:none"><div class="emoji">🔍</div><p>沒有符合的搭配詞</p></div>
+
+<footer>Powered by Hermes Agent · 共 6,084 筆搭配詞</footer>
+
+<script>
+let allData = [];
+let filteredData = [];
+const PAGE_SIZE = 50;
+let currentPage = 0;
+
+// Load data
+fetch('data.json')
+  .then(r => r.json())
+  .then(data => {
+    allData = data;
+    document.getElementById('entryCount').textContent = `共 ${data.length.toLocaleString()} 筆`;
+    document.getElementById('loading').style.display = 'none';
+
+    // Collect unique types for filter buttons
+    const types = new Set();
+    data.forEach(d => { if (d.type) types.add(d.type); });
+    const fg = document.getElementById('filterGroup');
+    [...types].sort().forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.filter = t;
+      btn.textContent = t;
+      btn.addEventListener('click', () => filter(t, btn));
+      fg.appendChild(btn);
+    });
+
+    doSearch();
+  });
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function doSearch() {
+  const term = document.getElementById('searchBox').value.toLowerCase().trim();
+  const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+
+  filteredData = allData.filter(d => {
+    if (activeFilter !== 'all' && d.type !== activeFilter) return false;
+    if (!term) return true;
+    const txt = (d.phrase + ' ' + d.chinese + ' ' + d.type + ' ' + d.example + ' ' + d.pattern).toLowerCase();
+    return txt.includes(term);
+  });
+
+  currentPage = 0;
+  document.getElementById('resultsInfo').textContent = term
+    ? `搜尋「${term}」：${filteredData.length.toLocaleString()} 筆結果`
+    : `顯示 ${filteredData.length.toLocaleString()} 筆`;
+
+  renderPage();
+  setupInfiniteScroll();
+}
+
+function renderPage() {
+  const grid = document.getElementById('grid');
+  const noResults = document.getElementById('noResults');
+  const start = currentPage * PAGE_SIZE;
+  const page = filteredData.slice(start, start + PAGE_SIZE);
+
+  if (filteredData.length === 0) {
+    grid.innerHTML = '';
+    noResults.style.display = 'block';
+    return;
+  }
+  noResults.style.display = 'none';
+
+  const html = page.map(d => `
+    <div class="card" onclick="this.classList.toggle('expanded')">
+      <div class="phrase"><span class="highlight">${esc(d.phrase)}</span></div>
+      <div class="meta">
+        <span class="chinese">${esc(d.chinese)}</span>
+        ${d.type ? `<span class="type-tag">${esc(d.type)}</span>` : ''}
+      </div>
+      <div class="expand-hint">👆 點擊展開例句</div>
+      <div class="details">
+        ${d.example ? `<div class="example-block"><div class="example-en">${esc(d.example)}</div>${d.pattern ? `<div class="example-pattern">📐 ${esc(d.pattern)}</div>` : ''}</div>` : ''}
+        ${d.simple ? `<div class="simple-block">✏️ ${esc(d.simple)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  if (currentPage === 0) {
+    grid.innerHTML = html;
+  } else {
+    grid.insertAdjacentHTML('beforeend', html);
+  }
+}
+
+function setupInfiniteScroll() {
+  window.onscroll = () => {
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+      if ((currentPage + 1) * PAGE_SIZE < filteredData.length) {
+        currentPage++;
+        renderPage();
+      }
+    }
+  };
+}
+
+function filter(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  doSearch();
+}
+
+// Search
+document.getElementById('searchBox').addEventListener('input', doSearch);
+
+// Initial filter click handler
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    filter(this.dataset.filter, this);
+  });
+});
+</script>
+</body>
+</html>
