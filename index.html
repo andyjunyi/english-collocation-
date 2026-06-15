@@ -187,6 +187,11 @@
     color: var(--accent-light);
     margin-top: 4px;
   }
+  .card .example-cn {
+    font-size: .82em;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
   .card .simple-block {
     font-size: .82em;
     color: var(--text-dim);
@@ -294,8 +299,8 @@ function renderPage() {
       </div>
       <div class="expand-hint">👆 點擊展開例句</div>
       <div class="details">
-        ${d.example ? `<div class="example-block"><div class="example-en">${esc(d.example)}</div>${d.pattern ? `<div class="example-pattern">📐 ${esc(d.pattern)}</div>` : ''}</div>` : ''}
-        ${d.simple ? `<div class="simple-block">✏️ ${esc(d.simple)}</div>` : ''}
+        ${d.example ? `<div class="example-block"><div class="example-en">${esc(d.example)}</div>${d.example_cn ? `<div class="example-cn">${esc(d.example_cn)}</div>` : ''}${d.pattern ? `<div class="example-pattern">📐 ${esc(d.pattern)}</div>` : ''}</div>` : ''}
+        ${d.simple ? `<div class="simple-block">✏️ ${esc(d.simple)}${d.simple_cn ? `<br>${esc(d.simple_cn)}` : ''}</div>` : ''}
       </div>
     </div>
   `).join('');
